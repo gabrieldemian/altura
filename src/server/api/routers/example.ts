@@ -1,5 +1,4 @@
-import { TRPCError } from "@trpc/server";
-import { Alchemy, AlchemySettings, Network } from "alchemy-sdk";
+import { Alchemy, type AlchemySettings, Network } from "alchemy-sdk";
 import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
@@ -9,8 +8,8 @@ export const getNFTs = createTRPCRouter({
     .input(
       z.object({
         addr: z.string().length(42, "Addresses should have 42 bytes"),
-        pageSize: z.number().default(10),
-        pageKey: z.string().default('0')
+        pageSize: z.number().default(9),
+        pageKey: z.string().optional()
       })
     )
     .mutation(async ({ input: { addr, pageSize, pageKey } }) => {
@@ -22,7 +21,7 @@ export const getNFTs = createTRPCRouter({
       const alchemy = new Alchemy(settings)
       const data = await alchemy.nft.getNftsForOwner(addr, {
         pageSize,
-        pageKey
+        pageKey,
       })
 
       return {

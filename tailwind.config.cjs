@@ -4,7 +4,8 @@ const config = {
   theme: {
     extend: {
       container: {
-        center: true
+        center: true,
+        padding: '0.5rem'
       }
     },
   },

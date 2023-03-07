@@ -1,10 +1,10 @@
 import clsx from "clsx"
-import { forwardRef, type LegacyRef } from "react"
+import { type ChangeEvent, forwardRef, type LegacyRef } from "react"
 
 interface Props {
   placeholder?: string
-  value?: string
-  onChange?: () => void
+  value?: string | number
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void
   invalid?: boolean
   autoFocus?: boolean
 }
