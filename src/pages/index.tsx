@@ -1,95 +1,148 @@
-import { type NextPage } from "next";
-import Head from "next/head";
-import { Button, Input, NFT } from "~/components";
+import { type NextPage } from 'next'
+import { Button, Card, Input, Modal, NFT, NFTDetails } from '~/components'
 
-import { api } from "~/utils/api";
-import { type FormEvent, useRef, useState, useMemo } from 'react';
-import { usePaginate } from "~/hooks";
+import { api } from '~/utils/api'
+import { type FormEvent, useState, useMemo, useCallback } from 'react'
+import { usePaginate } from '~/hooks'
+import { type OwnedNft } from 'alchemy-sdk'
 
 const Home: NextPage = () => {
-
-  const addrRef = useRef<HTMLInputElement>(null)
-  const mutation = api.eth.getNFTs.useMutation()
-
+  // active NFT that will be rendered on the modal
+  const [activeNFT, setActiveNFT] = useState<OwnedNft>()
+  const [addr, setAddr] = useState<string>('')
   const [pageSize, setPageSize] = useState<string>('9')
 
-  const {pages} = usePaginate({ pageSize: parseInt(pageSize), total: mutation.data?.data.totalCount ?? 1 })
+  // mutation obj from TRPC
+  const mutation = api.eth.getNFTs.useMutation()
 
-  const [isSearchInvalid, setIsSearchInvalid] = useState(false)
+  const { pages } = usePaginate({
+    pageSize: parseInt(pageSize),
+    total: mutation.data?.data.totalCount ?? 1,
+  })
 
-  // only accept numbers
-  const isPageSizeInvalid = useMemo(() => /\D+/ig.test(pageSize) , [pageSize])
+  const isAddrValid = useMemo(() => !!addr && addr.length === 42, [addr])
+  // Page size input must only have numbers
+  const isPageSizeValid = useMemo(() => /^\d+$/.test(pageSize), [pageSize])
+  const isSearchValid = useMemo(
+    () => isAddrValid && isPageSizeValid,
+    [isPageSizeValid, isAddrValid],
+  )
 
-  const nextPage = () => {
-    if (!addrRef.current || !mutation.data) return
-    mutation.mutate({ pageSize: parseInt(pageSize), pageKey: mutation.data.data.pageKey, addr: addrRef.current?.value })
-  }
-
-  const getNFTs = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!addrRef.current) return
-    const addr = addrRef.current.value
-    if (addr.length !== 42) {
-      setIsSearchInvalid(true)
-      return 
-    }
-    setIsSearchInvalid(false)
-    mutation.mutate({ pageSize: parseInt(pageSize), pageKey: mutation.data?.data.pageKey, addr })
-  }
+  // Will be triggered by "Submit" and "Next" buttons
+  const getNFTs = useCallback(
+    (e?: FormEvent<HTMLFormElement>) => {
+      if (e) e.preventDefault()
+      if (!isSearchValid) return
+      mutation.mutate({
+        pageSize: parseInt(pageSize),
+        pageKey: mutation.data?.data.pageKey,
+        addr: addr,
+      })
+    },
+    [addr, isSearchValid, pageSize, mutation],
+  )
 
   return (
     <>
-      <Head>
-        <title>Altura Test</title>
-      </Head>
-      <main className="container max-w-[70ch] flex justify-center mt-20">
-        <div className="w-full">
-          <form onSubmit={getNFTs} className='flex flex-col md:flex-row gap-3 my-10 justify-center'>
+      <main className="container mt-10 max-w-[1000px]">
+        <Modal isOpen={!!activeNFT} close={() => setActiveNFT(undefined)}>
+          <>
+            {activeNFT && isSearchValid && (
+              <NFTDetails owner={addr} nft={activeNFT} />
+            )}
+          </>
+        </Modal>
 
-            <div className='flex gap-2 relative flex-col'>
-              <p>How many NFTs per page</p>
-              <Input
-                invalid={isPageSizeInvalid}
-                value={pageSize}
-                onChange={(e) => setPageSize(e.target.value)}
-                placeholder='How many NFTs per page'
-              />
-              {isPageSizeInvalid && <small className='absolute -bottom-5 text-red-700'>Should be a number</small>}
+        <Card>
+          <p>
+            Hello! Here you can see all NFTs that are owned by a specific
+            wallet. Fill the address input below with a wallet address, and then
+            press the &quot;Search&quot; button. You can view more details about
+            the NFT by clicking on it.
+          </p>
+        </Card>
+        <form
+          onSubmit={getNFTs}
+          className="my-10 flex flex-col gap-3 md:flex-row"
+        >
+          <div className="relative flex flex-col gap-2">
+            <p>NFTs per page</p>
+            <Input
+              max={100}
+              min={1}
+              isInvalid={!isPageSizeValid}
+              value={pageSize}
+              onChange={(e) => setPageSize(e.target.value)}
+              placeholder="How many NFTs per page"
+            />
+            {!isPageSizeValid && (
+              <small className="absolute -bottom-5 text-red-700">
+                Must be a number
+              </small>
+            )}
+          </div>
+
+          <div className="relative flex flex-col gap-2">
+            <p>Address</p>
+            <Input
+              value={addr}
+              onChange={(e) => setAddr(e.target.value)}
+              placeholder="Address to search NFTs"
+            />
+            <small className="absolute -bottom-5 text-gray-700">
+              Address must be 42 characters long
+            </small>
+          </div>
+          <Button
+            isFluid
+            className="mt-5 h-[fit-content] self-end md:mt-0"
+            isLoading={mutation.isLoading}
+            isDisabled={!isSearchValid}
+            type="submit"
+          >
+            Search
+          </Button>
+        </form>
+
+        {mutation.isError && mutation.error.message}
+        {mutation.status === 'success' && !mutation.data && (
+          <p>This user does not have any NFTs</p>
+        )}
+
+        {mutation.status === 'success' && !!mutation.data && (
+          <div className="flex flex-col items-center">
+            <h1 className="text-3xl font-black text-violet-500">Owned NFTs</h1>
+            <p>
+              This user has <strong>{mutation.data.data.totalCount}</strong>{' '}
+              NFTs
+            </p>
+            <p className="mb-5">
+              <strong>{pages}</strong> pages with page size of {pageSize}
+            </p>
+
+            <div className="grid justify-center gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+              {mutation.data?.data.ownedNfts.map((nft, i) => (
+                <NFT
+                  onClick={() => setActiveNFT(nft)}
+                  key={nft.tokenId.concat(String(i)).concat(nft.title)}
+                  {...nft}
+                />
+              ))}
             </div>
 
-            <div className='flex gap-2 relative flex-col'>
-              <p>Address</p>
-              <Input invalid={isSearchInvalid} ref={addrRef} placeholder='Address to search NFTs' />
-              {isSearchInvalid && <small className='absolute -bottom-5 text-red-700'>Address should have 42 bytes</small>}
+            <div className="my-5 mx-auto flex items-center justify-center">
+              <Button
+                isDisabled={!mutation.data.data.pageKey}
+                onClick={() => getNFTs()}
+              >
+                {'Next Page ->'}
+              </Button>
             </div>
-            <Button isFluid className="h-[fit-content] self-end" isLoading={mutation.isLoading} type="submit">
-              Search
-            </Button>
-
-          </form>
-          {mutation.isError && (JSON.stringify(mutation.error.message))}
-          {mutation.status === "success" &&
-            <div className="flex items-center flex-col">
-
-              <h1 className="text-3xl text-violet-500 font-black">Owned NFTs</h1>
-              <p>This user has <strong>{mutation.data.data.totalCount}</strong> NFTs</p>
-              <p className="mb-5"><strong>{pages}</strong> pages with page size of {pageSize}</p>
-
-              <div className="flex flex-wrap basis-52 gap-3 justify-center">
-               {mutation.data?.data.ownedNfts.map((nft, i) => (
-                  <NFT {...nft} key={nft.tokenId.concat(String(i))} />
-                ))}
-              </div>
-
-              <div className="flex mx-auto justify-center items-center my-5">
-                <Button isDisabled={!mutation.data.data.pageKey} onClick={nextPage}>{"Next ->"}</Button>
-              </div>
-            </div>
-          }
-        </div>
+          </div>
+        )}
       </main>
     </>
-  );
-};
+  )
+}
 
-export default Home;
+export default Home

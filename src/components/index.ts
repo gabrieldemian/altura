@@ -1,4 +1,7 @@
 export { default as Button } from './Button'
+export { default as Modal } from './Modal'
 export { default as Loading } from './Loading'
 export { default as Input } from './Input'
 export { default as NFT } from './NFT'
+export { default as NFTDetails } from './NFTDetails'
+export { default as Card } from './Card'

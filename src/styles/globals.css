@@ -4,9 +4,31 @@
 
 body, html {
   font-size: 18px;
-  @apply bg-gray-200;
+  @apply bg-gray-200 break-words;
 }
 
 .truncate-text {
-  @apply text-ellipsis whitespace-nowrap overflow-hidden;
+  @apply text-ellipsis whitespace-nowrap overflow-hidden break-all;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.lock-scroll {
+  overflow-y: hidden !important;
 }

@@ -6,7 +6,8 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "lint:fix": "eslint_d '**/*.{ts,tsx,cjs,mjs}' --fix"
   },
   "dependencies": {
     "@tanstack/react-query": "^4.20.2",
@@ -24,6 +25,8 @@
   },
   "devDependencies": {
     "@types/eslint": "^8.21.1",
+    "@typescript-eslint/eslint-plugin": "^5.44.0",
+    "@typescript-eslint/parser": "^5.43.0",
     "@types/node": "^18.14.0",
     "@types/prettier": "^2.7.2",
     "@types/react": "^18.0.28",
@@ -32,6 +35,12 @@
     "@typescript-eslint/parser": "^5.53.0",
     "autoprefixer": "^10.4.7",
     "eslint": "^8.34.0",
+    "eslint_d": "^12.2.1",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-import-resolver-typescript": "^3.5.3",
+    "eslint-plugin-eslint-comments": "^3.2.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-prettier": "^4.2.1",
     "eslint-config-next": "^13.2.1",
     "postcss": "^8.4.14",
     "prettier": "^2.8.1",

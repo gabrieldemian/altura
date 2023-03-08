@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState } from 'react'
 
 interface Props {
   total: number
@@ -12,7 +12,7 @@ const usePaginate = ({ total, pageSize }: Props) => {
 
   const updatePage = (op: 'prev' | 'next') => {
     if (currPage === (op === 'prev' ? 0 : pages)) return
-    setCurrPage(n => op === 'prev' ? n - 1 : n + 1 )
+    setCurrPage((n) => (op === 'prev' ? n - 1 : n + 1))
   }
 
   return {
@@ -23,7 +23,7 @@ const usePaginate = ({ total, pageSize }: Props) => {
     goToLastPage: () => setCurrPage(pages),
     goToFirstPage: () => setCurrPage(1),
     pageSize,
-    total
+    total,
   }
 }
 
