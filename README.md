@@ -9,6 +9,9 @@
 ## How to run
 Install dependencies with `yarn install` or `npm install` and then run `yarn dev`. Open `localhost:3000` on your browser.
 
+## Live link
+https://altura-jade.vercel.app/
+
 ## Screenshots
 ![image](https://user-images.githubusercontent.com/42912075/223588274-2aff1879-43ca-468b-8d51-6a8e565680e4.png)
 
